@@ -81,11 +81,11 @@
 			mui.plusReady(function() {
 
 				// 判断用户是否注册登录过，如果本地内存有全局的用户对象，此时直接跳转到首页
-				// var userInfo = app.getUserGlobalInfo();
-				// if (userInfo != null) {
-				// 	// 页面跳转
-				// 	mui.openWindow("index.html", "index.html");
-				// }
+				var userInfo = app.getUserGlobalInfo();
+				if (userInfo != null) {
+					// 页面跳转
+					mui.openWindow("index.html", "index.html");
+				}
 
 				var userform = document.getElementById("userform");
 				var username = document.getElementById("username");
@@ -111,7 +111,6 @@
 
 						// 获取每台手机的唯一cid
 						var cid = plus.push.getClientInfo().clientid;
-						console.log(app.serverUrl + "/user/registerOrLogin");
 						// 与后端联调
 						mui.ajax(app.serverUrl + "/user/registerOrLogin", {
 							data: {
@@ -129,24 +128,23 @@
 								// 服务器返回响应，根据响应结果，分析是否登录成功；
 								console.log(JSON.stringify(data));
 
-								// username.blur();
-								// txt_password.blur();
+								username.blur();
+								txt_password.blur();
 
-								// if (data.status == 200) {
-								// 	// 登录或者注册成功之后，保存全局用户对象到本地缓存
-								// 	var userInfoJson = data.data;
-								// 	app.setUserGlobalInfo(userInfoJson);
+								if (data.code == 200) {
+									alert("success");
+									// 登录或者注册成功之后，保存全局用户对象到本地缓存
+									var userInfoJson = data.data;
+									app.setUserGlobalInfo(userInfoJson);
 
-								// 	// 页面跳转
-								// 	mui.openWindow("index.html", "index.html");
-								// } else {
-								// 	app.showToast(data.msg, "error");
-								// }
+									// 页面跳转
+									mui.openWindow("index.html", "index.html");
+								} else {
+									app.showToast(data.msg, "error");
+								}
 							},
 							error: function(data) {
-								console.log(JSON.stringify(data));
 								alert(JSON.stringify(data));
-								alert(data);
 							}
 						});
 

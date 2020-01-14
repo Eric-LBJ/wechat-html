@@ -18,7 +18,7 @@ window.app = {
 	},
 
 	/**
-	 * 弹出信息
+	 * 封装消息提示框,默认mui不支持居中和自定义icon,所以使用H5+
 	 * @param {Object} msg
 	 * @param {Object} type
 	 */
@@ -27,6 +27,23 @@ window.app = {
 			icon: "image/" + type + ".png",
 			verticalAlign: "center"
 		})
-	}
+	},
+
+	/**
+	 * 保存用户的全局对象
+	 * @param {Object} user
+	 */
+	setUserGlobalInfo: function(user) {
+		var userInfoStr = JSON.stringify(user);
+		plus.storage.setItem("userInfo", userInfoStr);
+	},
+
+	/**
+	 * 获取用户的全局对象
+	 */
+	getUserGlobalInfo: function() {
+		var userInfoStr = plus.storage.getItem("userInfo");
+		return JSON.parse(userInfoStr);
+	},
 
 }

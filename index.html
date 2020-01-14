@@ -67,6 +67,14 @@
 			}
 
 			mui.plusReady(function() {
+				
+				/**
+				 * 禁止安卓手机使用后退键跳到登陆页
+				 */
+				mui.back = function(){
+					return false;
+				}
+				
 				//获取当前的webview对象
 				var indexWebView = plus.webview.currentWebview();
 
