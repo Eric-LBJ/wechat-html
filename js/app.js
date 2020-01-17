@@ -3,7 +3,12 @@ window.app = {
 	/**
 	 * 后端服务发布的url地址
 	 */
-	serverUrl: 'http://10.0.0.18:8080',
+	serverUrl: 'http://10.0.0.19:8080',
+	
+	/**
+	 * 后端服务发布的url地址
+	 */
+	imageServerUrl: 'http://vbferu.natappfree.cc/eric/',
 
 	/**
 	 * 非空校验
