@@ -13,8 +13,14 @@
 		<h1>通讯录</h1>
 		
 		<script src="js/mui.js"></script>
+		<script src="js/app.js"></script>
 		<script type="text/javascript">
 			mui.init()
+			
+			mui.plusReady(function () {
+			    var contactListStr = app.getContactList();
+				console.log("好好的："+JSON.stringify(contactListStr))
+			})
 		</script>
 	</body>
 

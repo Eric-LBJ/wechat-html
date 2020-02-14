@@ -81,8 +81,8 @@
 			mui.plusReady(function() {
 
 				// 判断用户是否注册登录过，如果本地内存有全局的用户对象，此时直接跳转到首页
-				var userInfo = app.getUserGlobalInfo();
-				if (userInfo != null) {
+				var token = app.getToken();
+				if (app.isNotNull(token)) {
 					// 页面跳转
 					mui.openWindow("index.html", "index.html");
 				}
@@ -112,42 +112,55 @@
 						// 获取每台手机的唯一cid
 						var cid = plus.push.getClientInfo().clientid;
 						// 与后端联调
-						mui.ajax(app.serverUrl + "/user/registerOrLogin", {
+						mui.ajax(app.serverUrl, {
 							data: {
-								username: username.value,
-								password: txt_password.value,
-								cid: cid
+								"request": {
+									"apiName": "/weChat/userService/registerOrLogin",
+									"apiVer": "1.0.0"
+								},
+								"params": {
+									"user": {
+										"username": username.value,
+										"password": txt_password.value,
+										"cid": cid
+									}
+								}
 							},
 							dataType: 'json', //服务器返回json格式数据
 							type: 'post', //HTTP请求类型
-							timeout: 10000, //超时时间设置为10秒；
+							// timeout: 20000, //超时时间设置为10000秒；
 							headers: {
 								'Content-Type': 'application/json'
+								// 'Content-Type':'application/x-www-form-urlencoded'
 							},
 							success: function(data) {
-								// 服务器返回响应，根据响应结果，分析是否登录成功；
-								console.log(JSON.stringify(data));
 
+								// 服务器返回响应，根据响应结果，分析是否登录成功；
 								username.blur();
 								txt_password.blur();
 
 								if (data.code == 200) {
 									alert("success");
-									// 登录或者注册成功之后，保存全局用户对象到本地缓存
-									var userInfoJson = data.data;
-									app.setUserGlobalInfo(userInfoJson);
+									// 登录或者注册成功之后，保存全局token到本地缓存
+									var token = data.data;
+									app.setToken(token);
 
 									// 页面跳转
 									mui.openWindow("index.html", "index.html");
 								} else {
-									app.showToast(data.msg, "error");
+									app.showToast(data.message, "error");
 								}
+
+								// 页面跳转
+								mui.openWindow("index.html", "index.html");
 							},
-							error: function(data) {
-								alert(JSON.stringify(data));
+							error: function(xhr, type, errorThrown) {
+								//异常处理；
+								console.log(type);
+								console.log(JSON.stringify(xhr));
+								app.showToast("登录/注册失败", "error");
 							}
 						});
-
 					}
 					// 阻止默认时间，阻止默认表单提交
 					e.preventDefault();

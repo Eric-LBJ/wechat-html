@@ -13,9 +13,9 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 		<link rel="stylesheet" href="css/cropper.css">
 		<link rel="stylesheet" href="css/main.css">
-		
+
 		<style>
-			
+
 			#container {
 				width: 100%;
 				position: absolute;
@@ -28,11 +28,11 @@
 	</head>
 
 	<body>
-		
+
 		<header class="mui-bar mui-bar-nav title" style="position: fixed;">
 			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left" style="color: white;"></a>
 			<a id="cutter" class="mui-pull-right" style="font-size: 15px;color: white;line-height: 40px;">
-				<img src="../../image/upload.png" width="20px"/>
+				<img src="../../image/upload.png" width="20px" />
 			</a>
 			<h1 class="mui-title title-color"><b id="chatting-nickname">个人头像</b></h1>
 		</header>
@@ -53,67 +53,79 @@
 
 		<script type="text/javascript">
 			mui.init();
-			
+
 			var $image = $('#image');
 			mui.plusReady(function() {
-				
+
 				var user = app.getUserGlobalInfo();
 				var faceImage = user.faceImageBig;
 				// 获取屏幕宽度，设置图片
 				$image.attr('src', app.imgServerUrl + faceImage);
-				
+
 				/** ======================== 从相册选择图片 ======================== **/
-					// 从相册中选择图片
-				    plus.gallery.pick( function(path){
-				    	
-				    	$image.attr('src', path);
-				    	
-				    	faceCutter();
-				    }, function ( e ) {
-				    	mui.openWindow("index.html", "index.html");
-				    }, {filter:"image"} );
-				
+				// 从相册中选择图片
+				plus.gallery.pick(function(path) {
+
+					$image.attr('src', path);
+
+					faceCutter();
+				}, function(e) {
+					mui.openWindow("index.html", "index.html");
+				}, {
+					filter: "image"
+				});
+
 				/** ======================== 图片裁剪 ======================== **/
-				
+
 				$("#cutter").on('tap', function() {
-					
-					plus.nativeUI.showWaiting( "上传中..." );
-					
+
+					plus.nativeUI.showWaiting("上传中...");
+
 					var cropper = $image.data('cropper');
 					var result = $image.cropper("getCroppedCanvas");
-					if(result) {
+					if (result) {
 						var base64Url = result.toDataURL();
-												
+
 						// 上传头像
 						//获取全局对象
 						var user = app.getUserGlobalInfo();
+						var token = app.getToken();
 						// 与后端联调
-						mui.ajax(app.serverUrl + "/user/fileUpload",{
-							data:{
-								userId:user.id,
-								faceData:base64Url
+						mui.ajax(app.serverUrl, {
+							data: {
+								"request": {
+									"apiName": "/weChat/userService/updateUserInfo",
+									"apiVer": "1.0.0",
+									"aiToken": token
+								},
+								"params": {
+									"user":{
+										"id": user.userId,
+										"faceData": base64Url
+									}
+								}
 							},
-							dataType:'json',//服务器返回json格式数据
-							type:'post',//HTTP请求类型
-							timeout:10000,//超时时间设置为10秒；
-							headers:{'Content-Type':'application/json'},	              
-							success:function(data){
-								
+							dataType: 'json', //服务器返回json格式数据
+							type: 'post', //HTTP请求类型
+							// timeout: 10000, //超时时间设置为10秒；
+							headers: {
+								'Content-Type': 'application/json'
+							},
+							success: function(data) {
+
 								// 关闭‘上传中’等待框
 								plus.nativeUI.closeWaiting();
-								
+
 								if (data.code == 200) {
-									var userInfo = data.data;
-									app.setUserGlobalInfo(userInfo);
-									
+
 									// 触发另外一个webview的自定义事件，可以使用 mui.fire()
 									var myWebview = plus.webview.getWebviewById("my.html");
 									mui.fire(myWebview, "refresh");
-									
+
 									// 触发另外一个webview的自定义事件，可以使用 mui.fire()
 									var myfaceWebview = plus.webview.getWebviewById("myFace.html");
 									mui.fire(myfaceWebview, "refresh");
-									
+
 									// 页面跳转
 									mui.openWindow("index.html", "index.html");
 								} else {
@@ -127,20 +139,20 @@
 					}
 				});
 			});
-			
+
 			function faceCutter() {
-				
-				plus.nativeUI.showWaiting( "请稍等..." );
-				
-//				var $image = $('#image');
+
+				plus.nativeUI.showWaiting("请稍等...");
+
+				//				var $image = $('#image');
 				var options = {
 					aspectRatio: 1 / 1,
 					crop: function(e) {}
 				};
-			
+
 				// Cropper
 				$image.cropper(options);
-				
+
 				plus.nativeUI.closeWaiting();
 			}
 		</script>

@@ -89,6 +89,23 @@
 					mui.openWindow("mynickname.html", "mynickname.html");
 				});
 
+				// 查看我的二维码
+				var link_my_qrcode = document.getElementById("link_my_qrcode");
+				link_my_qrcode.addEventListener("tap", function() {
+					mui.openWindow({
+						url: "myQRCode.html",
+						id: "myQRCode.html",
+						styles: {}
+					})
+				});
+
+				// 用户退出
+				var link_logout = document.getElementById("link_logout");
+				link_logout.addEventListener("tap", function() {
+					app.userLogout();
+					mui.openWindow("login.html", "login.html");
+				});
+
 				// 添加自定义事件，刷新头像
 				window.addEventListener("refresh", function() {
 					refreshUserInfo();
