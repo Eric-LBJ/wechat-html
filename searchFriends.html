@@ -41,13 +41,12 @@
 					var yourFriendUsername = txt_your_friend_username.value;
 
 					plus.nativeUI.showWaiting("请稍后...");
-					var token = app.getToken();
 					mui.ajax(app.serverUrl, {
 						data: {
 							"request": {
 								"apiName": "/weChat/userService/searchUserInfoByUserName",
 								"apiVer": "1.0.0",
-								"aiToken": token
+								"aiToken": app.getToken()
 							},
 							"params": {
 								"myUserId": user.userId,

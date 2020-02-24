@@ -45,9 +45,15 @@
 			mui.init()
 
 			mui.plusReady(function() {
+
 				var li_add_friends = document.getElementById("li_add_friends");
 				li_add_friends.addEventListener("tap", function(e) {
 					mui.openWindow("searchFriends.html", "searchFriends.html");
+				});
+
+				var li_scanme = document.getElementById("li_scanme");
+				li_scanme.addEventListener("tap", function() {
+					mui.openWindow("scanme.html", "scanme.html");
 				});
 			});
 		</script>

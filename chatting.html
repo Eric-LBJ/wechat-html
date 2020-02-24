@@ -138,25 +138,27 @@
 						}
 						
 						// 发送消息, 渲染消息的html到msg div之下
-						sendMsg(app.imgServerUrl + me.faceImage, msg_text_val);
+						sendMsg(app.imageServerUrl + me.faceImage, msg_text_val);
 						// 情况消息文本框中的内容
 						msg_text.value = "";
 						// 发送消息完毕之后，把发送按钮的颜色改为灰白色
 						send.setAttribute("class", "mui-btn-gray");
 						
 						// 构建ChatMsg
-						var chatMsg = new app.ChatMsg(me.id, friendUserId, msg_text_val, null);
+						var chatMsg = new app.ChatMessage(me.userId, friendUserId, msg_text_val, null);
 						// 构建DataContent
 						var dataContent = new app.DataContent(app.CHAT, chatMsg, null);
 						
 						// 调用websocket 发送消息到netty后端
-						var wsWebview = plus.webview.getWebviewById("imooc-chatlist.html");
+						var wsWebview = plus.webview.getWebviewById("chatlist.html");
 						wsWebview.evalJS("CHAT.chat('" + JSON.stringify(dataContent) + "')");
 //						wsWebview.evalJS("CHAT.chat('" + msg_text_val + "')");
 						
 						// 保存聊天历史记录到本地缓存
-						app.saveUserChatHistory(me.id, friendUserId, msg_text_val, 1);
-						app.saveUserChatSnapshot(me.id, friendUserId, msg_text_val, true);
+						// console.log(JSON.stringify(me));
+						// console.log(friendUserId);
+						app.saveUserChatHistory(me.userId, friendUserId, msg_text_val, 1);
+						app.saveUserChatSnapshot(me.userId, friendUserId, msg_text_val, true);
 //						receiveMsg("模拟接受消息~~~~~~");
 					});
 				});
@@ -166,14 +168,15 @@
 					
 					var msgHtml = '<div class="friend_lists">' +
 										'<div class="header_img">' +
-											'<img src="' + app.imgServerUrl + friendFaceImage + '" width="40px" height="40px" />' +
+											'<img src="' + app.imageServerUrl + friendFaceImage + '" width="40px" height="40px" />' +
 										'</div>' +
 										'<div class="msg-wrapper right">' +
-											'<p class="msg-left-white">' + msg + '</p>' +
+											'<p class="msg-left-white"  id="p_msg_revice">' + msg + '</p>' +
 										'</div>' +
 								  '</div>'; 
 					
 					var msg_list = document.getElementById("msg");
+
 					msg_list.insertAdjacentHTML("beforeend", msgHtml);
 					
 					playReceiveMsgSound();
@@ -222,28 +225,28 @@
 				var msg_list = document.getElementById("msg");
 				
 				var me = app.getUserGlobalInfo();
-				var myId = me.id;
+				var myId = me.userId;
 				var myFaceImg = me.faceImage;
 
 				var chatHistoryList = app.getUserChatHistory(myId, friendUserId);
 				
-				var togetherHTML = "";
+				var toGetherHTML = "";
 				
 				for (var i = 0 ; i < chatHistoryList.length ; i ++) {
 					var singleMsg = chatHistoryList[i];
 					if (singleMsg.flag == 1) {
-						togetherHTML += '<div class="me_lists">' +
+						toGetherHTML += '<div class="me_lists">' +
 									'<div class="header_img">' +
-										'<img src="' + app.imgServerUrl + myFaceImg + '" width="40px" height="40px" />' +
+										'<img src="' + app.imageServerUrl + myFaceImg + '" width="40px" height="40px" />' +
 									'</div>' +
 									'<div class="msg-wrapper left">' +
 										'<p class="msg-right-green">' + singleMsg.msg + '</p>' +
 									'</div>' +
 								  '</div>';
 					} else {
-						togetherHTML += '<div class="friend_lists">' +
+						toGetherHTML += '<div class="friend_lists">' +
 										'<div class="header_img">' +
-											'<img src="' + app.imgServerUrl + friendFaceImage + '" width="40px" height="40px" />' +
+											'<img src="' + app.imageServerUrl + friendFaceImage + '" width="40px" height="40px" />' +
 										'</div>' +
 										'<div class="msg-wrapper right">' +
 											'<p class="msg-left-white">' + singleMsg.msg + '</p>' +
@@ -251,7 +254,7 @@
 								  '</div>';
 					}
 				}
-				msg_list.innerHTML = togetherHTML;
+				msg_list.innerHTML = toGetherHTML;
 			}
 			
 		</script>

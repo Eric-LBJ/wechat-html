@@ -58,18 +58,28 @@
 			
 			function onmarked( type, result ) {
 				if (type === 0) {
-					var content = result.split("muxin_qrcode:");
+					var content = result.split("username:[");
+					content = content[1].split("]");
 					if (content.length != 2) {
 						mui.alert(result)
 					} else {
-						var friendUsername = content[1];
+						var friendUsername = content[0];
 						
 						var user = app.getUserGlobalInfo();
 						
 						plus.nativeUI.showWaiting("请稍后...");
-						mui.ajax(app.serverUrl + "/u/search?myUserId=" + user.id +
-										"&friendUsername=" + friendUsername, {
-							data:{},
+						mui.ajax(app.serverUrl, {
+							data: {
+								"request": {
+									"apiName": "/weChat/userService/searchUserInfoByUserName",
+									"apiVer": "1.0.0",
+									"aiToken": app.getToken()
+								},
+								"params": {
+									"myUserId": user.userId,
+									"friendUsername": friendUsername
+								}
+							},
 							dataType:'json',//服务器返回json格式数据
 							type:'post',//HTTP请求类型
 							timeout:10000,//超时时间设置为10秒；
@@ -78,7 +88,7 @@
 								//服务器返回响应
 								plus.nativeUI.closeWaiting();
 								
-								if (data.status == 200) {
+								if (data.code == 200) {
 									
 									mui.openWindow({
 										url: "searchFriendsResult.html",
@@ -90,7 +100,7 @@
 									});
 									
 								} else {
-									app.showToast(data.msg, "error");
+									app.showToast(data.message, "error");
 								}
 							}
 						});

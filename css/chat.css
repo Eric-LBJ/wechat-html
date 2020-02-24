@@ -1,4 +1,4 @@
-﻿/*图片气泡*/
+/*图片气泡*/
 .friend_lists {
 	margin: 0 50px 0px 10px;
 	position: relative;
@@ -180,4 +180,12 @@ footer {
 	height: 100%;
 	overflow: auto;
 	-webkit-overflow-scrolling: touch;
+}
+
+.p_msg_revice {
+	width: 100%;
+	height: auto;
+	word-wrap: break-word;
+	word-break: break-all;
+	overflow: hidden;
 }

@@ -129,7 +129,7 @@
 
 					var me = app.getUserGlobalInfo();
 					// 标记未读状态为已读
-					app.readUserChatSnapshot(me.id, friendUserId);
+					app.readUserChatSnapshot(me.userId, friendUserId);
 					// 渲染快照列表进行展示
 					loadingChatSnapshot();
 				});
@@ -143,9 +143,9 @@
 					var friendUserId = me.getAttribute("friendUserId");
 
 					// 1. 删除本地聊天记录
-					app.deleteUserChatHistory(user.id, friendUserId);
+					app.deleteUserChatHistory(user.userId, friendUserId);
 					// 2. 删除本地聊天快照
-					app.deleteUserChatSnapshot(user.id, friendUserId);
+					app.deleteUserChatSnapshot(user.userId, friendUserId);
 					// 3. 移除当前用户操作的dom节点
 					var li = me.parentNode.parentNode; // 获取li标签
 					var ul_chatSnapshot = document.getElementById("ul_chatSnapshot");
@@ -168,10 +168,11 @@
 						}
 
 						CHAT.socket = new WebSocket(app.nettyServerUrl);
+
 						CHAT.socket.onopen = CHAT.wsopen,
-							CHAT.socket.onclose = CHAT.wsclose,
-							CHAT.socket.onerror = CHAT.wserror,
-							CHAT.socket.onmessage = CHAT.wsmessage;
+						CHAT.socket.onclose = CHAT.wsclose,
+						CHAT.socket.onerror = CHAT.wserror,
+						CHAT.socket.onmessage = CHAT.wsmessage;
 					} else {
 						alert("手机设备过旧，请升级手机设备...");
 					}
@@ -192,7 +193,6 @@
 					loadingChatSnapshot();
 				},
 				reChat: function(msg) {
-					console.log("消息重新发送...");
 					CHAT.socket.send(msg);
 				},
 				wsopen: function() {
@@ -200,7 +200,7 @@
 
 					var me = app.getUserGlobalInfo();
 					// 构建ChatMsg
-					var chatMsg = new app.ChatMsg(me.id, null, null, null);
+					var chatMsg = new app.ChatMessage(me.userId, null, null, null);
 					// 构建DataContent
 					var dataContent = new app.DataContent(app.CONNECT, chatMsg, null);
 					// 发送websocket
@@ -210,7 +210,7 @@
 					fetchUnReadMsg();
 
 					// 定时发送心跳
-					setInterval("CHAT.keepalive()", 10000);
+					setInterval("CHAT.keepalive()", 30000);
 				},
 				wsmessage: function(e) {
 					console.log("接受到消息：" + e.data);
@@ -224,16 +224,18 @@
 					}
 
 					// 如果不是重新拉取好友列表，则获取聊天消息模型，渲染接收到的聊天记录
-					var chatMsg = dataContent.chatMsg;
-					var msg = chatMsg.msg;
+					var chatMsg = dataContent.chatMessage;
+					var msg = chatMsg.message;
 					var friendUserId = chatMsg.senderId;
 					var myId = chatMsg.receiverId;
 
-					// 调用聊天webview的receiveMsg方法
-					//					var chatWebview = plus.webview.getWebviewById("chatting-180718GA2ZM9N5S8");
+					// // 调用聊天webview的receiveMsg方法
+					// var chatWebview = plus.webview.getWebviewById("chatting-5e462c0bd2dec1d48c93d422");
 					var chatWebview = plus.webview.getWebviewById("chatting-" + friendUserId);
 					var isRead = true; // 设置消息的默认状态为已读
 					if (chatWebview != null) {
+
+						// chatWebview.evalJS("receiveMsg('" + e.data + "')");
 						chatWebview.evalJS("receiveMsg('" + msg + "')");
 						chatWebview.evalJS("resizeScreen()");
 					} else {
@@ -241,7 +243,7 @@
 					}
 
 					// 接受到消息之后，对消息记录进行签收
-					var dataContentSign = new app.DataContent(app.SIGNED, null, chatMsg.msgId);
+					var dataContentSign = new app.DataContent(app.SIGNED, null, chatMsg.messageId);
 					CHAT.chat(JSON.stringify(dataContentSign));
 
 					// 保存聊天历史记录到本地缓存
@@ -278,10 +280,16 @@
 
 			// 每次重连后获取服务器的未签收消息
 			function fetchUnReadMsg() {
-				var user = app.getUserGlobalInfo();
 				var msgIds = ","; // 格式：  ,1001,1002,1003,
-				mui.ajax(app.serverUrl + "/u/getUnReadMsgList?acceptUserId=" + user.id, {
-					data: {},
+				mui.ajax(app.serverUrl, {
+					data: {
+						"request": {
+							"apiName": "/wechat/chatMsgInfoService/listUnReadChatMsgByAcceptUserId",
+							"apiVer": "1.0.0",
+							"aiToken": app.getToken()
+						},
+						"params": {}
+					},
 					dataType: 'json', //服务器返回json格式数据
 					type: 'post', //HTTP请求类型
 					timeout: 10000, //超时时间设置为10秒；
@@ -290,9 +298,8 @@
 					},
 					success: function(data) {
 
-						if (data.status == 200) {
-							var unReadMsgList = data.data;
-							console.log(JSON.stringify(unReadMsgList));
+						if (data.code == 200) {
+							var unReadMsgList = data.data.data;
 
 							// 1. 保存聊天记录到本地
 							// 2. 保存聊天快照到本地
@@ -324,7 +331,7 @@
 			// 展示聊天快照，渲染列表
 			function loadingChatSnapshot() {
 				var user = app.getUserGlobalInfo();
-				var chatSnapshotList = app.getUserChatSnapshot(user.id);
+				var chatSnapshotList = app.getUserChatSnapshot(user.userId);
 
 				var chatItemHtml = "";
 				var ul_chatSnapshot = document.getElementById("ul_chatSnapshot");
@@ -345,14 +352,14 @@
 						readHtmlAfter = '</span>';
 					}
 
-					chatItemHtml = '<li friendUserId="' + friendId + '" friendNickname="' + friend.friendNickname +
-						'" friendFaceImage="' + friend.friendFaceImage + '" class="chat-with-friend mui-table-view-cell mui-media">' +
+					chatItemHtml = '<li friendUserId="' + friendId + '" friendNickname="' + friend.nickName +
+						'" friendFaceImage="' + friend.faceImage + '" class="chat-with-friend mui-table-view-cell mui-media">' +
 						'<div class="mui-slider-right mui-disabled">' +
 						'<a id="link_delChatRecord" friendUserId="' + friendId + '" class="mui-btn mui-btn-red">删除</a>' +
 						'</div>' +
 						'<div class="mui-slider-handle mui-media-body ">' +
-						'<img class="mui-media-object mui-pull-left" src="' + app.imgServerUrl + friend.friendFaceImage + '"/>' +
-						readHtmlBefore + friend.friendNickname + readHtmlAfter +
+						'<img class="mui-media-object mui-pull-left" src="' + app.imageServerUrl + friend.faceImage + '"/>' +
+						readHtmlBefore + friend.nickName + readHtmlAfter +
 						'<p class="mui-ellipsis">' + chatItem.msg + '</p>' +
 						'</div>' +
 						'</li>';
@@ -366,8 +373,17 @@
 			// 获取后端所有好友列表
 			function fetchContactList() {
 				var user = app.getUserGlobalInfo();
-				mui.ajax(app.serverUrl + "/u/myFriends?userId=" + user.id, {
-					data: {},
+				mui.ajax(app.serverUrl, {
+					data: {
+						"request": {
+							"apiName": "/wechat/myFriendsInfoService/listUserInfoWithFriendsInfo",
+							"apiVer": "1.0.0",
+							"aiToken": app.getToken()
+						},
+						"params": {
+							"myUserId": user.userId
+						}
+					},
 					dataType: 'json', //服务器返回json格式数据
 					type: 'post', //HTTP请求类型
 					timeout: 10000, //超时时间设置为10秒；
@@ -376,8 +392,8 @@
 					},
 					success: function(data) {
 
-						if (data.status == 200) {
-							var contactList = data.data;
+						if (data.code == 200) {
+							var contactList = data.data.data;
 							app.setContactList(contactList);
 						}
 					}
@@ -436,45 +452,46 @@
 					}
 				});
 			}
-			
-			
+
+
 
 			// 操作好友请求
 			function operatorFriendRequest(userId, friendId, operType) {
 				mui.ajax(app.serverUrl, {
-						data: {
-							"request": {
-								"apiName": "/wechat/friendsRequestInfoService/passOrIgnoreRequest",
-								"apiVer": "1.0.0",
-								"aiToken": app.getToken()
-							},
-							"params": {
-								"sendUserId": friendId,
-								"acceptUserId":userId,
-								"operatorType":operType
-							}
+					data: {
+						"request": {
+							"apiName": "/wechat/friendsRequestInfoService/passOrIgnoreRequest",
+							"apiVer": "1.0.0",
+							"aiToken": app.getToken()
 						},
-						dataType: 'json', //服务器返回json格式数据
-						type: 'post', //HTTP请求类型
-						timeout: 10000, //超时时间设置为10秒；
-						headers: {
-							'Content-Type': 'application/json'
-						},
-						success: function(data) {
-
-							if(data.code == 200){
-								// 更新通讯录
-								var myFriendList = data.data.data;
-								app.setContactList(myFriendList);
-								
-								// 重新加载好友请求记录
-								loadingFriendRequests();
-							}else{
-								app.showToast(data.message, "error");
-							}
-														
+						"params": {
+							"sendUserId": friendId,
+							"acceptUserId": userId,
+							"operatorType": operType
 						}
-					});
+					},
+					dataType: 'json', //服务器返回json格式数据
+					type: 'post', //HTTP请求类型
+					timeout: 10000, //超时时间设置为10秒；
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					success: function(data) {
+
+						if (data.code == 200) {
+							console.log(JSON.stringify(data));
+							// 更新通讯录
+							var myFriendList = data.data.data;
+							app.setContactList(myFriendList);
+
+							// 重新加载好友请求记录
+							loadingFriendRequests();
+						} else {
+							app.showToast(data.message, "error");
+						}
+
+					}
+				});
 			}
 
 			// 用于拼接单个朋友的请求
